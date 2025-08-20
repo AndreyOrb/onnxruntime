@@ -122,9 +122,13 @@ __global__ void Dequantize4BitsKernelReOrder(
     if constexpr (std::is_same_v<T, half>) {
       T zp_adjust = -scale * __short2half_rn(zp);
       output_i[i] = __uint2half_rn((quant_value >> (4 * i)) & 0xF) * scale + zp_adjust;
+
+#if (__CUDACC_VER_MAJOR__ > 11)
     } else if constexpr (std::is_same_v<T, __nv_bfloat16>) {
       T zp_adjust = __hneg(scale) * __ushort2bfloat16_rn(zp);
       output_i[i] = __uint2bfloat16_rn((quant_value >> (4 * i)) & 0xF) * scale + zp_adjust;
+#endif
+
     } else {
       T zp_adjust = -scale * T(zp);
       output_i[i] = T((quant_value >> (4 * i)) & 0xF) * scale + zp_adjust;
@@ -246,6 +250,7 @@ template Status Dequantize4Bits<half, uint8_t>(
     int block_size,
     cudaStream_t stream);
 
+#if (__CUDACC_VER_MAJOR__ > 11)
 template Status Dequantize4Bits<__nv_bfloat16, uint8_t>(
     __nv_bfloat16* output,
     const uint8_t* quant_data,
@@ -256,6 +261,7 @@ template Status Dequantize4Bits<__nv_bfloat16, uint8_t>(
     int n,
     int block_size,
     cudaStream_t stream);
+#endif
 
 template Status Dequantize4Bits<float, float>(
     float* output,
@@ -279,6 +285,7 @@ template Status Dequantize4Bits<half, half>(
     int block_size,
     cudaStream_t stream);
 
+#if (__CUDACC_VER_MAJOR__ > 11)
 template Status Dequantize4Bits<__nv_bfloat16, __nv_bfloat16>(
     __nv_bfloat16* output,
     const uint8_t* quant_data,
@@ -289,6 +296,7 @@ template Status Dequantize4Bits<__nv_bfloat16, __nv_bfloat16>(
     int n,
     int block_size,
     cudaStream_t stream);
+#endif
 
 template <
     typename ElementT,
@@ -492,6 +500,7 @@ template Status DequantizeBlockwise4b<half>(
     int columns,
     cudaStream_t stream);
 
+#if (__CUDACC_VER_MAJOR__ > 11)
 template Status DequantizeBlockwise4b<__nv_bfloat16>(
     __nv_bfloat16* dst,
     const uint8_t* src,
@@ -502,6 +511,7 @@ template Status DequantizeBlockwise4b<__nv_bfloat16>(
     int rows,
     int columns,
     cudaStream_t stream);
+#endif
 
 }  // namespace cuda
 }  // namespace contrib

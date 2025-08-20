@@ -269,8 +269,12 @@ SKIPLAYERNORM_IMPL(float, true);
 SKIPLAYERNORM_IMPL(float, false);
 SKIPLAYERNORM_IMPL(half, true);
 SKIPLAYERNORM_IMPL(half, false);
+
+#if (__CUDACC_VER_MAJOR__ > 11)
 SKIPLAYERNORM_IMPL(nv_bfloat16, true);
 SKIPLAYERNORM_IMPL(nv_bfloat16, false);
+#endif
+
 }  // namespace cuda
 }  // namespace contrib
 }  // namespace onnxruntime

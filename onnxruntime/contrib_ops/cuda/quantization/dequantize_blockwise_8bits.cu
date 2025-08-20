@@ -134,10 +134,14 @@ __global__ void Dequantize8BitsKernelReOrder(
       T zp_T = __ushort2half_rn(zp);
       T zp_adjust = -scale * zp_T;
       output_i[i] = __ushort2half_rn(q_val) * scale + zp_adjust;
+
+#if (__CUDACC_VER_MAJOR__ > 11)
     } else if constexpr (std::is_same_v<T, __nv_bfloat16>) {
       T zp_T = __uint2bfloat16_rn(zp);
       T zp_adjust = -scale * zp_T;
       output_i[i] = __uint2bfloat16_rn(q_val) * scale + zp_adjust;
+#endif
+
     } else {
       T zp_T = static_cast<T>(zp);
       T zp_adjust = -scale * zp_T;
@@ -178,8 +182,12 @@ __global__ void Dequantize8BitsKernel(
     // Convert uint8_t zp to T (float/half/bfloat16)
     if constexpr (std::is_same_v<T, half>) {
       zero_point_value = __uint2half_rn(zp);
+
+#if (__CUDACC_VER_MAJOR__ > 11)
     } else if constexpr (std::is_same_v<T, __nv_bfloat16>) {
       zero_point_value = __uint2bfloat16_rn(zp);
+#endif
+
     } else {
       zero_point_value = static_cast<T>(zp);
     }
@@ -272,6 +280,7 @@ template Status Dequantize8Bits<half, uint8_t>(
     int block_size,
     cudaStream_t stream);
 
+#if (__CUDACC_VER_MAJOR__ > 11)
 template Status Dequantize8Bits<__nv_bfloat16, uint8_t>(
     __nv_bfloat16* output,
     const uint8_t* quant_data,
@@ -282,6 +291,7 @@ template Status Dequantize8Bits<__nv_bfloat16, uint8_t>(
     int n,
     int block_size,
     cudaStream_t stream);
+#endif
 
 template Status Dequantize8Bits<float, float>(
     float* output,
@@ -399,10 +409,14 @@ __global__ void dequantizeThread8b(ElementT* dst,
         const half zp_half = __uint2half_rn(zp_uint8);
         const half adjust = -scale * zp_half;
         dst[q_val_idx] = __uint2half_rn(q_val) * scale + adjust;
+
+#if (__CUDACC_VER_MAJOR__ > 11)
       } else if constexpr (std::is_same<ElementT, __nv_bfloat16>::value) {
         const __nv_bfloat16 zp_bf16 = __uint2bfloat16_rn(zp_uint8);
         const __nv_bfloat16 adjust = -scale * zp_bf16;
         dst[q_val_idx] = __uint2bfloat16_rn(q_val) * scale + adjust;
+#endif
+
       } else {  // Float
         static_assert(std::is_same<ElementT, float>::value, "Only float, half and bfloat16 are supported!");
         const float zp_float = static_cast<float>(zp_uint8);
@@ -518,6 +532,7 @@ template Status DequantizeBlockwise8b<half>(
     int columns,
     cudaStream_t stream);
 
+#if (__CUDACC_VER_MAJOR__ > 11)
 template Status DequantizeBlockwise8b<__nv_bfloat16>(
     __nv_bfloat16* dst,
     const uint8_t* src,
@@ -528,6 +543,7 @@ template Status DequantizeBlockwise8b<__nv_bfloat16>(
     int rows,
     int columns,
     cudaStream_t stream);
+#endif
 
 }  // namespace cuda
 }  // namespace contrib
